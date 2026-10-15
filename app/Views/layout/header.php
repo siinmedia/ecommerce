@@ -5,7 +5,8 @@ $u = $user ?? null;
 $isAdmin = $is_admin ?? false;
 $isDev = $is_dev ?? false;
 $isStaff = $isAdmin || $isDev;
-$siteName = ($config['app']['name'] ?? 'Toko');
+$siteName = ($config['app']['name'] ?? 'TokoMVP');
+$cssVersion = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: '1';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $active = function (string ...$prefixes) use ($path): string {
   foreach ($prefixes as $pre) {
@@ -34,7 +35,7 @@ elseif ($u && class_exists(\App\Controllers\CartController::class)) {
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23D92727'/%3E%3Ctext x='32' y='44' font-family='sans-serif' font-size='36' font-weight='700' fill='%23FFC928' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
 <?php if ($isStaff): ?><script src="https://cdn.tailwindcss.com"></script><?php endif; ?>
-<link rel="stylesheet" href="/assets/css/app.css">
+<link rel="stylesheet" href="/assets/css/app.css?v=<?= (int)$cssVersion ?>">
 </head>
 <body<?= $cartCount > 0 && !$isStaff ? ' class="has-cart"' : '' ?>>
 <a href="#main" class="skip">Lewati ke konten</a>

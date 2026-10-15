@@ -4,6 +4,7 @@ use App\Core\Helpers;
 use App\Core\View;
 $isStaff = ($is_admin ?? false) || ($is_dev ?? false);
 $siteName = ($config['app']['name'] ?? 'Toko');
+$jsVersion = @filemtime(dirname(__DIR__, 3) . '/public/assets/js/app.js') ?: '1';
 // Ringkasan cart untuk bottom sheet (data yang sama dengan halaman /cart).
 $sheetCart = ['lines' => [], 'subtotal' => 0, 'count' => 0];
 if (!$isStaff && class_exists(\App\Controllers\CartController::class)) {
@@ -158,6 +159,6 @@ $sheetCount = (int)($sheetCart['count'] ?? 0);
 </div>
 <?php endif; ?>
 <div class="sr" role="status" aria-live="polite" id="live"></div>
-<script src="/assets/js/app.js"></script>
+<script src="/assets/js/app.js?v=<?= (int)$jsVersion ?>"></script>
 </body>
 </html>

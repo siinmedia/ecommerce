@@ -24,7 +24,7 @@
     <?= Csrf::field() ?>
     <textarea name="note" placeholder="Catatan / alasan tolak (wajib jika tolak)"></textarea>
     <div class="flex gap-2">
-      <button name="decision" value="approve" class="btn-primary px-4 py-1 rounded text-sm" type="submit" onclick="return confirm('Setujui pembayaran ini?')">Setujui (PAID)</button>
+      <button name="decision" value="approve" class="btn-primary px-4 py-1 rounded text-sm" type="submit" data-confirm="Setujui pembayaran ini?">Setujui (PAID)</button>
       <button name="decision" value="reject" class="px-4 py-1 rounded text-sm border border-red-400 text-red-600" type="submit">Tolak</button>
     </div>
   </form>
