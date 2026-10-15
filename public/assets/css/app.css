@@ -1,0 +1,27 @@
+/* app.css — local overrides on top of Tailwind CDN. Keep minimal for MVP. */
+:root { --brand: #1d4ed8; }
+html { scroll-behavior: smooth; }
+body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--brand); outline-offset: 2px;
+}
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { background: #1e40af; }
+.badge { display: inline-block; padding: .15rem .6rem; border-radius: 9999px; font-size: .75rem; font-weight: 600; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-review { background: #dbeafe; color: #1e40af; }
+.badge-paid, .badge-success { background: #d1fae5; color: #065f46; }
+.badge-failed, .badge-rejected { background: #fee2e2; color: #991b1b; }
+.badge-shipped { background: #e0e7ff; color: #3730a3; }
+.badge-neutral { background: #f3f4f6; color: #374151; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: .75rem; }
+.flash { border-radius: .5rem; padding: .75rem 1rem; margin-bottom: 1rem; }
+.flash-success { background: #d1fae5; color: #065f46; }
+.flash-error { background: #fee2e2; color: #991b1b; }
+table.data { width: 100%; border-collapse: collapse; font-size: .875rem; }
+table.data th, table.data td { border-bottom: 1px solid #e5e7eb; padding: .6rem .75rem; text-align: left; }
+table.data th { background: #f9fafb; font-weight: 600; }
+input[type=text], input[type=email], input[type=password], input[type=number], select, textarea {
+  width: 100%; border: 1px solid #d1d5db; border-radius: .5rem; padding: .55rem .75rem;
+}
+label.lbl { display: block; font-size: .875rem; font-weight: 600; margin-bottom: .25rem; }
