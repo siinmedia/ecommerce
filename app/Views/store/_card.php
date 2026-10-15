@@ -1,41 +1,43 @@
 <?php
-use App\Core\Csrf;
-use App\Core\Helpers;
 use App\Core\View;
 /**
- * Kartu produk katalog — partial bersama home + catalog.
- * Variabel: $p (row produk), $vid (int|null varian pertama), $stock (int total stok varian aktif).
+ * Kartu produk katalog ala etalase jajanan — partial bersama home + catalog.
+ * Variabel: $p (row produk + category_name), $variants (list varian aktif: id/name/price/stock).
+ * Klik kartu -> bottom sheet quick-view (JS). Tautan Detail untuk no-JS/keyboard.
  * Hanya data nyata: tanpa coret harga, diskon %, terjual, rating.
  */
 $brand = preg_replace('/^paket kemitraan\s+/i', '', trim($p['name'] ?? ''));
 $initial = mb_strtoupper(mb_substr($brand !== '' ? $brand : trim($p['name'] ?? '?'), 0, 1));
-$stock = (int)($stock ?? 0);
-$stockCls = $stock <= 0 ? ' is-out' : ($stock <= 5 ? ' is-low' : '');
-$stockTxt = $stock <= 0 ? 'Habis' : ($stock <= 5 ? 'Sisa ' . $stock : 'Stok tersedia');
+$variants = array_values($variants ?? []);
+$totalStock = 0;
+foreach ($variants as $v) { $totalStock += (int)$v['stock']; }
+$hasStock = $totalStock > 0;
+$stockTxt = !$hasStock ? 'Habis' : ($totalStock <= 10 ? 'Sisa ' . $totalStock : 'Stok tersedia');
+$desc = trim(strip_tags($p['description'] ?? ''));
+if (mb_strlen($desc) > 140) { $desc = mb_substr($desc, 0, 140) . '…'; }
+$vdata = array_map(fn($v) => ['id' => (int)$v['id'], 'name' => (string)$v['name'], 'price' => (int)$v['price'], 'stock' => (int)$v['stock']], $variants);
+$slug = (string)($p['slug'] ?? '');
 ?>
-<article class="p-card">
-  <a class="p-media" href="/products/<?= View::e($p['slug']) ?>" aria-label="<?= View::e($p['name']) ?>">
-    <span class="p-ph" aria-hidden="true"><span class="p-ph__mark"><?= View::e($initial) ?></span></span>
-  </a>
-  <div class="p-body">
-    <span class="p-cat"><?= View::e($p['category_name'] ?? '') ?></span>
-    <a class="p-name" href="/products/<?= View::e($p['slug']) ?>"><?= View::e($p['name']) ?></a>
-    <span class="p-price"><?= Helpers::rupiah($p['price']) ?></span>
-    <span class="p-stock<?= $stockCls ?>"><?= View::e($stockTxt) ?></span>
-    <div class="p-foot">
-      <?php if (!empty($vid) && $stock > 0): ?>
-      <form method="post" action="/cart/add">
-        <?= Csrf::field() ?>
-        <input type="hidden" name="variant_id" value="<?= (int)$vid ?>">
-        <input type="hidden" name="qty" value="1">
-        <button class="btn btn--buy btn--sm btn--block" type="submit">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Keranjang
-        </button>
-      </form>
-      <?php else: ?>
-        <a class="btn btn--ghost btn--sm btn--block" href="/products/<?= View::e($p['slug']) ?>">Lihat Detail</a>
-      <?php endif; ?>
+<article class="mcard" tabindex="0" role="button"
+  data-slug="<?= View::e($slug) ?>"
+  data-name="<?= View::e($p['name']) ?>"
+  data-cat="<?= View::e($p['category_name'] ?? '') ?>"
+  data-desc="<?= View::e($desc) ?>"
+  data-variants="<?= View::e(json_encode($vdata)) ?>"
+  aria-label="<?= View::e($p['name']) ?>. Ketuk untuk pratinjau cepat.">
+  <div class="mcard__img" aria-hidden="true">
+    <span class="mcard__ph"><?= View::e($initial) ?></span>
+    <?php if (!empty($p['category_name'])): ?><span class="mcard__cat"><?= View::e($p['category_name']) ?></span><?php endif; ?>
+  </div>
+  <div class="mcard__body">
+    <h3 class="mcard__title"><?= View::e($p['name']) ?></h3>
+    <?php if ($desc !== ''): ?><p class="mcard__desc"><?= View::e($desc) ?></p><?php endif; ?>
+    <div class="mcard__foot">
+      <div class="mcard__price">
+        <span class="mcard__price-now"><?= \App\Core\Helpers::rupiah($p['price']) ?></span>
+        <span class="mcard__stock<?= $hasStock ? '' : ' is-out' ?>"><?= View::e($stockTxt) ?></span>
+      </div>
+      <a class="mcard__detail" href="/products/<?= View::e($slug) ?>">Detail</a>
     </div>
   </div>
 </article>

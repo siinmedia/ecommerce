@@ -1,6 +1,6 @@
 /* app.js — storefront vanilla JS (tanpa framework).
-   Mencakup: drawer, search toggle, varian+qty+harga live, beli-sekarang,
-   salin clipboard, preview upload, konfirmasi ringan, logika checkout. */
+   Mencakup: bottom-sheet quick-view, bottom-sheet cart, varian+qty+harga live,
+   beli-sekarang, salin clipboard, preview upload, konfirmasi ringan, checkout. */
 (function () {
   'use strict';
 
@@ -16,54 +16,159 @@
   }
   function money(n) { return 'Rp' + Number(n || 0).toLocaleString('id-ID'); }
 
-  /* ---- Drawer + scrim (fokus aksesibel) ---- */
-  var openBtn = $('drawer-open');
-  var closeBtn = $('drawer-close');
-  var drawer = $('drawer');
-  var scrim = $('scrim');
+  /* ---- Bottom sheet generik: scrim, Escape, fokus, scroll-lock ---- */
   var lastFocus = null;
-  function setDrawer(open) {
-    if (!drawer) return;
-    drawer.classList.toggle('is-open', open);
-    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
-    if (scrim) {
-      scrim.classList.toggle('is-open', open);
-      scrim.setAttribute('tabindex', open ? '0' : '-1');
-    }
-    if (openBtn) openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    try { document.body.style.overflow = open ? 'hidden' : ''; } catch (e) {}
-    if (open) {
-      lastFocus = document.activeElement;
-      if (closeBtn) closeBtn.focus();
-    } else if (lastFocus && lastFocus.focus) {
-      lastFocus.focus();
+  function openSheet(sheet) {
+    if (!sheet || sheet.classList.contains('is-open')) return;
+    lastFocus = document.activeElement;
+    sheet.classList.add('is-open');
+    sheet.setAttribute('aria-hidden', 'false');
+    try { document.body.style.overflow = 'hidden'; } catch (e) {}
+    var sc = sheet.querySelector('.sheet__scroll');
+    if (sc) sc.scrollTop = 0;
+    var close = sheet.querySelector('.sheet__close');
+    if (close) close.focus();
+  }
+  function closeSheet(sheet) {
+    if (!sheet || !sheet.classList.contains('is-open')) return;
+    sheet.classList.remove('is-open');
+    sheet.setAttribute('aria-hidden', 'true');
+    var anyOpen = document.querySelector('.sheet.is-open');
+    if (!anyOpen) {
+      try { document.body.style.overflow = ''; } catch (e) {}
+      if (lastFocus && lastFocus.focus) {
+        try { lastFocus.focus(); } catch (e) {}
+      }
+      lastFocus = null;
     }
   }
-  if (openBtn && drawer) {
-    openBtn.addEventListener('click', function () { setDrawer(true); });
-    if (closeBtn) closeBtn.addEventListener('click', function () { setDrawer(false); });
-    if (scrim) scrim.addEventListener('click', function () { setDrawer(false); });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && drawer.classList.contains('is-open')) setDrawer(false);
+  document.addEventListener('click', function (e) {
+    var closer = e.target.closest('[data-close]');
+    if (!closer) return;
+    var sheet = closer.closest('.sheet');
+    if (sheet) closeSheet(sheet);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.sheet.is-open').forEach(closeSheet);
+  });
+
+  /* ---- Quick-view: klik kartu -> bottom sheet ---- */
+  var qv = $('qv-sheet');
+  var qvState = { variants: [], qty: 1 };
+  function qvSelected() {
+    var form = $('qv-form');
+    if (!form) return null;
+    var r = form.querySelector('input[name="variant_id"]:checked');
+    if (!r) return null;
+    for (var i = 0; i < qvState.variants.length; i++) {
+      if (String(qvState.variants[i].id) === r.value) return qvState.variants[i];
+    }
+    return null;
+  }
+  function qvStockText(v) {
+    if (!v || v.stock <= 0) return 'Stok habis untuk paket ini.';
+    if (v.stock <= 10) return 'Sisa ' + v.stock + ' untuk paket ini.';
+    return 'Stok tersedia untuk paket ini.';
+  }
+  function qvRefresh() {
+    var v = qvSelected();
+    var max = v ? Math.min(99, Math.max(0, v.stock)) : 1;
+    if (qvState.qty < 1) qvState.qty = 1;
+    if (max > 0 && qvState.qty > max) qvState.qty = max;
+    var qEl = $('qv-qty');
+    var qvEl = $('qv-qty-val');
+    if (qEl) qEl.value = String(qvState.qty);
+    if (qvEl) qvEl.textContent = String(qvState.qty);
+    var priceEl = $('qv-price');
+    var totalEl = $('qv-total');
+    var stockEl = $('qv-stock');
+    var addBtn = $('qv-add');
+    var unit = v ? v.price : 0;
+    if (priceEl) priceEl.textContent = v ? money(unit) : '';
+    if (totalEl) totalEl.textContent = money(unit * qvState.qty);
+    if (stockEl) stockEl.textContent = qvStockText(v);
+    if (addBtn) addBtn.disabled = !v || v.stock <= 0;
+  }
+  function qvOpen(card) {
+    if (!qv || !card) return;
+    var name = card.getAttribute('data-name') || '';
+    var cat = card.getAttribute('data-cat') || '';
+    var desc = card.getAttribute('data-desc') || '';
+    var slug = card.getAttribute('data-slug') || '';
+    var variants = [];
+    try { variants = JSON.parse(card.getAttribute('data-variants') || '[]'); } catch (e) { variants = []; }
+    qvState.variants = variants.filter(function (v) { return v && v.id; });
+    qvState.qty = 1;
+
+    var ph = $('qv-ph');
+    if (ph) ph.textContent = (name.trim().charAt(0) || '?').toUpperCase();
+    var catEl = $('qv-cat');
+    if (catEl) catEl.textContent = cat;
+    var titleEl = $('qv-title');
+    if (titleEl) titleEl.textContent = name;
+    var descEl = $('qv-desc');
+    if (descEl) descEl.textContent = desc;
+    var detail = $('qv-detail');
+    if (detail && slug) detail.setAttribute('href', '/products/' + slug);
+
+    var box = $('qv-variants');
+    if (box) {
+      if (!qvState.variants.length) {
+        box.innerHTML = '<p class="muted" style="font-size:14px">Paket belum tersedia.</p>';
+      } else {
+        box.innerHTML = qvState.variants.map(function (v, i) {
+          return '<label class="variant">' +
+            '<input type="radio" name="variant_id" value="' + esc(String(v.id)) + '"' + (i === 0 ? ' checked' : '') + '>' +
+            '<span>' + esc(v.name) + ' — ' + money(v.price) + '</span>' +
+          '</label>';
+        }).join('');
+      }
+    }
+    qvRefresh();
+    openSheet(qv);
+    live(name + ' dibuka di pratinjau cepat.');
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('a, button')) return;
+    var card = e.target.closest('.mcard');
+    if (card) qvOpen(card);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var card = e.target.closest ? e.target.closest('.mcard') : null;
+    if (!card) return;
+    if (e.target.closest('a, button')) return;
+    e.preventDefault();
+    qvOpen(card);
+  });
+  if (qv) {
+    qv.addEventListener('change', function (e) {
+      if (e.target && e.target.name === 'variant_id') {
+        qvState.qty = 1;
+        qvRefresh();
+      }
     });
-    drawer.addEventListener('click', function (e) {
-      if (e.target.closest('a')) setDrawer(false);
+    var qMinus = $('qv-minus');
+    var qPlus = $('qv-plus');
+    if (qMinus) qMinus.addEventListener('click', function () {
+      qvState.qty = Math.max(1, qvState.qty - 1);
+      qvRefresh();
+    });
+    if (qPlus) qPlus.addEventListener('click', function () {
+      qvState.qty = Math.min(99, qvState.qty + 1);
+      qvRefresh();
     });
   }
 
-  /* ---- Search toggle ---- */
-  var sToggle = $('search-toggle');
-  var sBox = $('site-search');
-  if (sToggle && sBox) {
-    sToggle.addEventListener('click', function () {
-      var open = sBox.classList.toggle('is-open');
-      sToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      sToggle.setAttribute('aria-label', open ? 'Tutup pencarian' : 'Buka pencarian');
-      if (open) {
-        var inp = sBox.querySelector('input[type="search"]');
-        if (inp) inp.focus();
-      }
-    });
+  /* ---- Cart sheet: dibuka dari cartbar mengambang ---- */
+  var cartSheet = $('cart-sheet');
+  var cartOpen = $('cart-open');
+  var cartbar = $('cartbar');
+  // Halaman produk punya buybar sticky sendiri: sembunyikan cartbar agar tidak tumpuk.
+  if (cartbar && $('pd-form')) cartbar.hidden = true;
+  if (cartOpen && cartSheet) {
+    cartOpen.addEventListener('click', function () { openSheet(cartSheet); });
   }
 
   /* ---- Konfirmasi ringan ---- */
