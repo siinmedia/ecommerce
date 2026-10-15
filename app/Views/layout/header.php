@@ -50,9 +50,14 @@ elseif ($u && class_exists(\App\Controllers\CartController::class)) {
       <span class="brand__text"><span class="brand__name"><?= View::e($siteName) ?></span><span class="brand__tag">Belanja Aman</span></span>
     </a>
     <?php if (!$isStaff): ?>
-    <button class="icon-btn" id="search-toggle" type="button" aria-label="Buka pencarian" aria-expanded="false" aria-controls="site-search">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    </button>
+    <form method="get" action="/search" role="search" class="shop-search" aria-label="Pencarian paket">
+      <label class="sr" for="site-q">Cari paket kemitraan</label>
+      <input class="input shop-search__input" type="search" id="site-q" name="q" placeholder="Cari paket kemitraan..." autocomplete="off" value="<?= View::e($_GET['q'] ?? '') ?>">
+      <button class="btn btn--primary shop-search__btn" type="submit" aria-label="Cari">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="shop-search__txt">Cari</span>
+      </button>
+    </form>
     <a href="/cart" class="icon-btn" aria-label="Keranjang belanja<?= $cartCount > 0 ? ', ' . $cartCount . ' jenis barang' : '' ?>">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6"/></svg>
       <?php if ($cartCount > 0): ?><span class="cart-badge" aria-hidden="true"><?= $cartCount > 99 ? '99+' : (int)$cartCount ?></span><?php endif; ?>
@@ -82,14 +87,6 @@ elseif ($u && class_exists(\App\Controllers\CartController::class)) {
     <?php endif; ?>
   </div>
   <?php if (!$isStaff): ?>
-  <div class="s-search" id="site-search">
-    <div class="wrap">
-      <form method="get" action="/search" role="search" class="s-search__row">
-        <input class="input" type="search" name="q" placeholder="Cari produk..." aria-label="Cari produk" value="<?= View::e($_GET['q'] ?? '') ?>">
-        <button class="btn btn--primary" type="submit">Cari</button>
-      </form>
-    </div>
-  </div>
   <nav class="dnav" aria-label="Navigasi utama">
     <div class="wrap">
       <div class="dnav__list">

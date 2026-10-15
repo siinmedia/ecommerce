@@ -87,7 +87,7 @@ use App\Core\View;
         <div class="field">
           <label class="lbl" for="promo_code">Kode promo (opsional)</label>
           <div class="row" style="flex-wrap:nowrap">
-            <input class="input" type="text" id="promo_code" placeholder="cth: HEMAT10" autocomplete="off">
+            <input class="input" type="text" id="promo_code" placeholder="cth: WELCOME10" autocomplete="off">
             <button type="button" id="promo-btn" class="btn btn--ghost" style="flex:none">Pakai</button>
           </div>
           <p id="promo-msg" class="mt-2" style="font-size:14px" role="status"></p>

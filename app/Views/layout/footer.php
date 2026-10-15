@@ -25,15 +25,14 @@ $bnActive = function (string ...$prefixes) use ($path): string {
           <span class="foot__mark" aria-hidden="true"><?= View::e(mb_substr($siteName, 0, 1)) ?></span>
           <span class="foot__name"><?= View::e($siteName) ?></span>
         </div>
-        <p class="foot__desc">Belanja produk original dengan pembayaran transfer bank yang aman dan pengiriman ke seluruh Indonesia. Harga jelas, packing rapi, CS siap membantu.</p>
+        <p class="foot__desc">Katalog paket kemitraan. Bayar via transfer bank, unggah bukti, pesanan diverifikasi admin.</p>
       </div>
       <details open>
         <summary>Belanja<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="foot__links">
           <a href="/">Beranda</a>
-          <a href="/products">Katalog Produk</a>
+          <a href="/products">Katalog Paket</a>
           <a href="/cart">Keranjang</a>
-          <a href="/checkout">Checkout</a>
         </div>
       </details>
       <details>
@@ -41,22 +40,21 @@ $bnActive = function (string ...$prefixes) use ($path): string {
         <div class="foot__links">
           <a href="/account/orders">Pesanan Saya</a>
           <a href="/account/addresses">Alamat Saya</a>
-          <a href="/account/profile">Profil</a>
           <a href="/login">Masuk</a>
-          <a href="/register">Daftar</a>
         </div>
       </details>
       <details>
-        <summary>Bantuan<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <summary>Info Toko<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
         <div class="foot__contact">
-          <span>Pembayaran via transfer bank (BCA, Mandiri). Unggah bukti bayar, pesanan diverifikasi admin.</span>
-          <span>Pengiriman JNE / POS / TIKI ke seluruh Indonesia.</span>
+          <span>Jam operasional: Senin&ndash;Sabtu 09.00&ndash;17.00 WIB.</span>
+          <span>Pembayaran: transfer bank, verifikasi maks 1x24 jam.</span>
+          <span>Pengiriman: JNE / POS / TIKI.</span>
         </div>
       </details>
     </div>
     <div class="foot__bottom">
       <span>&copy; <?= date('Y') ?> <?= View::e($siteName) ?></span>
-      <span>Transfer aman &middot; Packing rapi &middot; CS responsif</span>
+      <span>Harga paket bersifat contoh</span>
     </div>
   </div>
 </footer>
@@ -68,7 +66,7 @@ $bnActive = function (string ...$prefixes) use ($path): string {
       Home
     </a>
     <a class="bnav__link<?= $bnActive('/products', '/categories', '/search') ?>" href="/products"<?= str_starts_with($path, '/products') ? ' aria-current="page"' : '' ?>>
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
       Katalog
     </a>
     <a class="bnav__link<?= $bnActive('/cart', '/checkout', '/orders/') ?>" href="/cart">
