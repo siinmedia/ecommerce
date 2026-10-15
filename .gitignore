@@ -2,3 +2,5 @@ app/Config/config.php
 storage/payment-proofs/*
 !storage/payment-proofs/.gitkeep
 storage/cron.log
+storage/logs/*
+!storage/logs/.gitkeep
