@@ -1,9 +1,21 @@
 <?php use App\Core\View; use App\Core\Helpers; ?>
-<h1 class="text-2xl font-bold mb-4">Masuk</h1>
-<form method="post" action="/login" class="card p-4 max-w-md space-y-3">
-  <?= \App\Core\Csrf::field() ?>
-  <div><label class="lbl" for="email">Email</label><input type="email" name="email" id="email" required value="<?= View::e(\App\Core\Helpers::old('email')) ?>"></div>
-  <div><label class="lbl" for="password">Password</label><input type="password" name="password" id="password" required></div>
-  <button class="btn-primary px-4 py-2 rounded w-full" type="submit">Masuk</button>
-  <p class="text-sm">Belum punya akun? <a class="underline" href="/register">Daftar</a></p>
-</form>
+<div class="wrap page">
+  <div class="form-narrow">
+    <h1 class="form-title">Masuk</h1>
+    <p class="form-sub">Masuk untuk checkout lebih cepat dan lacak pesanan.</p>
+    <form method="post" action="/login" class="form-card">
+      <?= \App\Core\Csrf::field() ?>
+      <div class="field">
+        <label class="lbl" for="email">Email <span class="req" aria-hidden="true">*</span></label>
+        <input class="input" type="email" name="email" id="email" required autocomplete="email" value="<?= View::e(Helpers::old('email')) ?>">
+      </div>
+      <div class="field">
+        <label class="lbl" for="password">Password <span class="req" aria-hidden="true">*</span></label>
+        <input class="input" type="password" name="password" id="password" required autocomplete="current-password">
+        <span class="field__hint"><a class="link" href="/forgot-password">Lupa password?</a></span>
+      </div>
+      <button class="btn btn--buy btn--block" type="submit">Masuk</button>
+      <p class="mt-3 center" style="font-size:14.5px">Belum punya akun? <a class="link" href="/register">Daftar</a></p>
+    </form>
+  </div>
+</div>

@@ -1,10 +1,24 @@
 <?php use App\Core\View; use App\Core\Helpers; ?>
-<h1 class="text-2xl font-bold mb-4">Daftar Akun</h1>
-<form method="post" action="/register" class="card p-4 max-w-md space-y-3">
-  <?= \App\Core\Csrf::field() ?>
-  <div><label class="lbl" for="name">Nama</label><input type="text" name="name" id="name" required value="<?= View::e(Helpers::old('name')) ?>"></div>
-  <div><label class="lbl" for="email">Email</label><input type="email" name="email" id="email" required value="<?= View::e(Helpers::old('email')) ?>"></div>
-  <div><label class="lbl" for="password">Password (min 8 karakter)</label><input type="password" name="password" id="password" required minlength="8"></div>
-  <button class="btn-primary px-4 py-2 rounded w-full" type="submit">Daftar</button>
-  <p class="text-sm">Sudah punya akun? <a class="underline" href="/login">Masuk</a></p>
-</form>
+<div class="wrap page">
+  <div class="form-narrow">
+    <h1 class="form-title">Daftar Akun</h1>
+    <p class="form-sub">Satu akun untuk belanja, lacak paket, dan riwayat order.</p>
+    <form method="post" action="/register" class="form-card">
+      <?= \App\Core\Csrf::field() ?>
+      <div class="field">
+        <label class="lbl" for="name">Nama <span class="req" aria-hidden="true">*</span></label>
+        <input class="input" type="text" name="name" id="name" required autocomplete="name" value="<?= View::e(Helpers::old('name')) ?>">
+      </div>
+      <div class="field">
+        <label class="lbl" for="email">Email <span class="req" aria-hidden="true">*</span></label>
+        <input class="input" type="email" name="email" id="email" required autocomplete="email" value="<?= View::e(Helpers::old('email')) ?>">
+      </div>
+      <div class="field">
+        <label class="lbl" for="password">Password (min 8 karakter) <span class="req" aria-hidden="true">*</span></label>
+        <input class="input" type="password" name="password" id="password" required minlength="8" autocomplete="new-password">
+      </div>
+      <button class="btn btn--buy btn--block" type="submit">Daftar</button>
+      <p class="mt-3 center" style="font-size:14.5px">Sudah punya akun? <a class="link" href="/login">Masuk</a></p>
+    </form>
+  </div>
+</div>
