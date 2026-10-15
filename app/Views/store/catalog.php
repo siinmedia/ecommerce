@@ -41,7 +41,7 @@ if ($totalPages > 1):
   $qs = $_GET; ?>
 <nav class="flex gap-2 mt-6" aria-label="Pagination">
   <?php for ($i = 1; $i <= $totalPages; $i++): $qs['page'] = $i; ?>
-    <a class="px-3 py-1 rounded border <?= $i === ($page ?? 1) ? 'bg-blue-700 text-white' : 'bg-white' ?>" href="/products?<?= http_build_query($qs) ?>"><?= $i ?></a>
+    <a class="px-3 py-1 rounded border <?= $i === ($page ?? 1) ? 'bg-blue-700 text-white' : 'bg-white' ?>" href="/products?<?= View::e(http_build_query($qs)) ?>"><?= (int)$i ?></a>
   <?php endfor; ?>
 </nav>
 <?php endif; ?>

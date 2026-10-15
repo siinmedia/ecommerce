@@ -6,6 +6,7 @@ return [
         'site_url' => 'http://localhost:8099',
         'timezone' => 'Asia/Jakarta',
         'env' => 'local', // local | production
+        'debug' => false, // true = tampilkan error detail (hanya lokal); false = display_errors Off + 500 generik
     ],
     'db' => [
         'host' => '127.0.0.1',

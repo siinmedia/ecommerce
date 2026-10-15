@@ -19,6 +19,12 @@ RewriteRule ^ index.php [QSA,L]
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
+# Blokir file sensitif yang tidak boleh terekspos
+<FilesMatch "(^\.git|\.md$|\.sql$|\.log$|\.env$|composer\.(json|lock)$)">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.git(/|$)
+
 # Cache static assets
 <IfModule mod_expires.c>
   ExpiresActive On

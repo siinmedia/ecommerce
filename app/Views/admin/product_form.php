@@ -22,7 +22,7 @@
   <div><label class="lbl">Status</label>
     <select name="status">
       <?php foreach (['draft', 'published', 'archived'] as $s): ?>
-        <option value="<?= $s ?>" <?= (($product['status'] ?? 'draft') === $s) ? 'selected' : '' ?>><?= $s ?></option>
+        <option value="<?= View::e($s) ?>" <?= (($product['status'] ?? 'draft') === $s) ? 'selected' : '' ?>><?= View::e($s) ?></option>
       <?php endforeach; ?></select></div>
   <h2 class="font-bold pt-2">Varian (nama | SKU | harga | stok | berat gr)</h2>
   <div id="variants" class="space-y-1">

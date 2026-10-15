@@ -30,6 +30,10 @@ class Router
 
     public function dispatch(string $method, string $uri): void
     {
+        // Treat HEAD like GET for routing (body stripped by the SAPI).
+        if ($method === 'HEAD') {
+            $method = 'GET';
+        }
         $path = parse_url($uri, PHP_URL_PATH) ?? '/';
         // Strip query, normalize trailing slash (except root)
         if ($path !== '/' && str_ends_with($path, '/')) {

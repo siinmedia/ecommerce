@@ -116,6 +116,7 @@ class CheckoutController
     public function promoCheck(array $p = []): void
     {
         Auth::requireLogin();
+        Csrf::requireValid();
         header('Content-Type: application/json');
         $code = trim($_POST['code'] ?? '');
         $subtotal = (int)($_POST['subtotal'] ?? 0);
@@ -340,6 +341,9 @@ class CheckoutController
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($path));
         header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; form-action 'none'");
+        header('Content-Disposition: inline');
         readfile($path);
     }
 

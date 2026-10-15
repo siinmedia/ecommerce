@@ -145,6 +145,13 @@ class OrderService
             ]);
             $orderId = (int)$pdo->lastInsertId();
 
+            // Tautkan redemption promo yang masih NULL ke order ini (dalam transaksi yang sama).
+            if ($promoId !== null) {
+                $pdo->prepare(
+                    'UPDATE promotion_redemptions SET order_id = ? WHERE promotion_id = ? AND user_id = ? AND order_id IS NULL'
+                )->execute([$orderId, $promoId, $userId]);
+            }
+
             $ist = $pdo->prepare(
                 'INSERT INTO order_items (order_id, product_id, variant_id, product_name, variant_name, sku, price, qty, line_total)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'

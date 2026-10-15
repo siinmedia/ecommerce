@@ -5,7 +5,7 @@
   <select name="status" style="max-width:200px">
     <option value="">Semua status</option>
     <?php foreach (['PENDING_PAYMENT','PAYMENT_REVIEW','PAYMENT_REJECTED','PAID','PROCESSING','SHIPPED','DELIVERED','COMPLETED','EXPIRED','CANCELLED'] as $s): ?>
-      <option value="<?= $s ?>" <?= (($filters['status'] ?? '') === $s) ? 'selected' : '' ?>><?= $s ?></option>
+      <option value="<?= View::e($s) ?>" <?= (($filters['status'] ?? '') === $s) ? 'selected' : '' ?>><?= View::e($s) ?></option>
     <?php endforeach; ?>
   </select>
   <button class="px-3 py-1 border rounded text-sm" type="submit">Filter</button>

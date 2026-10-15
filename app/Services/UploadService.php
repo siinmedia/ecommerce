@@ -34,6 +34,18 @@ class UploadService
         if (str_starts_with($mime, 'image/') && @getimagesize($file['tmp_name']) === false) {
             throw new \RuntimeException('File gambar tidak valid.');
         }
+        // Pemindaian awal: tolak file yang diawali signature executable/script.
+        $head = @file_get_contents($file['tmp_name'], false, null, 0, 4096);
+        if ($head !== false) {
+            $lower = strtolower($head);
+            if (
+                str_contains($lower, '<?php') || str_contains($lower, '<?=')
+                || str_contains($lower, '<script') || str_contains($lower, '<%')
+                || str_contains($lower, '#!/')
+            ) {
+                throw new \RuntimeException('File ditolak: terdeteksi konten script.');
+            }
+        }
         if (!is_dir($this->storageDir) && !mkdir($this->storageDir, 0755, true)) {
             throw new \RuntimeException('Storage tidak dapat ditulis.');
         }

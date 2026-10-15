@@ -66,4 +66,12 @@ foreach ($rows as $row) {
         fwrite(STDERR, "Fail {$row['order_code']}: {$e->getMessage()}\n");
     }
 }
+// Prune data rate-limit login > 24 jam (lihat AuthController::loginBlocked).
+try {
+    $pdo->prepare('DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)')->execute();
+    // Bersihkan token reset kedaluwarsa / sudah dipakai > 7 hari.
+    $pdo->prepare('DELETE FROM password_resets WHERE (used_at IS NOT NULL OR expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY))')->execute();
+} catch (Throwable $e) {
+    fwrite(STDERR, 'Prune gagal: ' . $e->getMessage() . "\n");
+}
 echo "Done. Expired: {$expired}\n";

@@ -1,0 +1,2 @@
+# Storage berisi file privat (bukti pembayaran, log). Tolak semua akses web langsung.
+Require all denied

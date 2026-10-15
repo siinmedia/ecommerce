@@ -15,7 +15,7 @@
       '@context' => 'https://schema.org', '@type' => 'Product',
       'name' => $product['name'], 'sku' => $product['sku'],
       'offers' => ['@type' => 'Offer', 'priceCurrency' => 'IDR', 'price' => (int)$product['price'], 'availability' => 'https://schema.org/InStock'],
-    ], JSON_UNESCAPED_SLASHES) ?>
+    ], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
     </script>
   </div>
   <div class="card p-6">

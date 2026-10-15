@@ -11,9 +11,56 @@ class Helpers
         exit;
     }
 
+    /** Hanya path lokal: diawali SATU slash; tolak `//`, backslash, skema, whitespace. */
+    public static function safeLocalPath(mixed $url, string $fallback = '/'): string
+    {
+        if (!is_string($url) || $url === '') {
+            return $fallback;
+        }
+        $url = trim($url);
+        if (!str_starts_with($url, '/')) {
+            return $fallback;
+        }
+        if (str_starts_with($url, '//')) {
+            return $fallback;
+        }
+        if (str_contains($url, '\\')) {
+            return $fallback;
+        }
+        if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*:#', $url)) {
+            return $fallback;
+        }
+        if (preg_match('/[\s\x00-\x1f\x7f]/', $url)) {
+            return $fallback;
+        }
+        return $url;
+    }
+
     public static function back(string $fallback = '/'): void
     {
-        self::redirect($_SERVER['HTTP_REFERER'] ?? $fallback);
+        $fallback = self::safeLocalPath($fallback, '/');
+        $ref = $_SERVER['HTTP_REFERER'] ?? $fallback;
+        if (is_string($ref) && trim($ref) !== '') {
+            $parts = parse_url(trim($ref));
+            if (is_array($parts)) {
+                // URL absolut ke host lain -> abaikan sepenuhnya (pakai fallback).
+                if (isset($parts['host'])) {
+                    $reqHost = strtolower(trim($_SERVER['HTTP_HOST'] ?? ''));
+                    $refHost = strtolower($parts['host']);
+                    // Terima juga tanpa port eksplisit bila host dasar sama.
+                    $base = static fn(string $h): string => strtolower(preg_replace('/:\d+$/', '', $h));
+                    if ($reqHost === '' || $base($refHost) !== $base($reqHost)) {
+                        self::redirect($fallback);
+                    }
+                }
+                if (isset($parts['path'])) {
+                    $candidate = $parts['path'] . (isset($parts['query']) ? '?' . $parts['query'] : '');
+                    self::redirect(self::safeLocalPath($candidate, $fallback));
+                }
+            }
+            self::redirect(self::safeLocalPath($ref, $fallback));
+        }
+        self::redirect($fallback);
     }
 
     public static function flash(string $key, ?string $value = null): ?string
@@ -27,9 +74,10 @@ class Helpers
         return $v;
     }
 
+    /** Nilai mentah old input — WAJIB di-escape di view via View::e(). */
     public static function old(string $key, string $default = ''): string
     {
-        return htmlspecialchars($_SESSION['_old'][$key] ?? $default, ENT_QUOTES);
+        return (string)($_SESSION['_old'][$key] ?? $default);
     }
 
     public static function keepOld(array $data): void

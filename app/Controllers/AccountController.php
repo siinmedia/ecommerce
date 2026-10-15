@@ -177,4 +177,69 @@ class AccountController
         Helpers::flash('success', 'Profil diperbarui.');
         Helpers::redirect('/account/profile');
     }
+
+    // ================= 2FA (wajib untuk admin/developer, opsional untuk user) =================
+
+    public function twoFa(array $p = []): void
+    {
+        $me = \App\Models\User::find(Auth::id());
+        $data = $this->base('Keamanan 2FA') + [
+            'totp_enabled' => (int)($me['totp_enabled'] ?? 0) === 1,
+            'backup_left' => \App\Models\User::countUnusedBackupCodes(Auth::id()),
+            'must_enable' => in_array(Auth::role(), ['admin', 'developer'], true),
+        ];
+        if (!$data['totp_enabled']) {
+            // Siapkan secret sementara untuk enroll (regenerasi tiap kunjungan).
+            $secret = \App\Core\Totp::generateSecret();
+            $_SESSION['totp_enroll_secret'] = $secret;
+            $data['secret'] = $secret;
+            $data['otpauth_uri'] = \App\Core\Totp::provisioningUri($secret, $me['email']);
+        }
+        View::layout('account/twofa', $data);
+    }
+
+    public function enableTwoFa(array $p = []): void
+    {
+        Csrf::requireValid();
+        $me = \App\Models\User::find(Auth::id());
+        $secret = $_SESSION['totp_enroll_secret'] ?? null;
+        if (!$secret || (int)($me['totp_enabled'] ?? 0) === 1) {
+            Helpers::flash('error', 'Sesi enroll kedaluwarsa. Muat ulang halaman.');
+            Helpers::redirect('/account/2fa');
+        }
+        $code = trim($_POST['code'] ?? '');
+        if (!\App\Core\Totp::verify($secret, $code)) {
+            Helpers::flash('error', 'Kode verifikasi salah. Coba lagi.');
+            Helpers::redirect('/account/2fa');
+        }
+        \App\Models\User::setTotpSecret(Auth::id(), $secret);
+        \App\Models\User::enableTotp(Auth::id());
+        $codes = \App\Core\Totp::generateBackupCodes(10);
+        \App\Models\User::storeBackupCodes(Auth::id(), array_map([\App\Core\Totp::class, 'hashBackupCode'], $codes));
+        unset($_SESSION['totp_enroll_secret']);
+        \App\Models\Audit::log(Auth::id(), Auth::role(), 'auth.2fa_enable', 'users', Auth::id());
+        // Tampilkan backup code SEKALI (render langsung, tidak disimpan plain di mana pun).
+        View::layout('account/twofa', $this->base('Keamanan 2FA') + [
+            'totp_enabled' => true,
+            'just_enabled' => true,
+            'backup_codes' => $codes,
+            'backup_left' => 10,
+            'must_enable' => in_array(Auth::role(), ['admin', 'developer'], true),
+        ]);
+    }
+
+    public function disableTwoFa(array $p = []): void
+    {
+        Csrf::requireValid();
+        $me = \App\Models\User::find(Auth::id());
+        $pass = $_POST['password'] ?? '';
+        if (!$me || !password_verify($pass, $me['password_hash'])) {
+            Helpers::flash('error', 'Password salah.');
+            Helpers::redirect('/account/2fa');
+        }
+        \App\Models\User::disableTotp(Auth::id());
+        \App\Models\Audit::log(Auth::id(), Auth::role(), 'auth.2fa_disable', 'users', Auth::id());
+        Helpers::flash('success', '2FA dinonaktifkan.');
+        Helpers::redirect('/account/2fa');
+    }
 }

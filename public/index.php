@@ -12,6 +12,61 @@ $config = require $configFile;
 
 date_default_timezone_set($config['app']['timezone'] ?? 'Asia/Jakarta');
 
+$debug = !empty($config['app']['debug']);
+// Production default: never leak errors to the browser.
+if (!$debug) {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+}
+error_reporting(E_ALL);
+
+// Global error/exception handling: log to storage/logs, show generic 500.
+$logDir = dirname(__DIR__) . '/storage/logs';
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0755, true);
+}
+$errorLog = $logDir . '/php-errors.log';
+set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) use ($errorLog, $debug): bool {
+    if (!(error_reporting() & $errno)) {
+        return false; // dihormati operator @
+    }
+    @file_put_contents(
+        $errorLog,
+        date('Y-m-d H:i:s') . " [{$errno}] {$errstr} @ {$errfile}:{$errline}\n",
+        FILE_APPEND | LOCK_EX
+    );
+    if (in_array($errno, [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+        throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+    }
+    return true;
+});
+set_exception_handler(function (Throwable $e) use ($errorLog, $debug, $config): void {
+    @file_put_contents(
+        $errorLog,
+        date('Y-m-d H:i:s') . ' [EX] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n",
+        FILE_APPEND | LOCK_EX
+    );
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
+    if ($debug) {
+        echo '<h1>Error</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
+    } else {
+        try {
+            echo \App\Core\View::render('errors/500', ['title' => 'Terjadi kesalahan']);
+        } catch (Throwable) {
+            echo '<h1>Terjadi kesalahan</h1>';
+        }
+    }
+    exit;
+});
+
+// Security headers (dikirim dari PHP agar tetap aktif tanpa mod_headers / php -S).
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; frame-ancestors 'self'; form-action 'self'");
+
 // Simple PSR-4 autoloader for App\
 spl_autoload_register(function (string $class) use ($appRoot): void {
     if (!str_starts_with($class, 'App\\')) {
@@ -31,6 +86,7 @@ use App\Controllers\CartController;
 use App\Controllers\CheckoutController;
 use App\Controllers\DevController;
 use App\Controllers\StoreController;
+use App\Core\Auth;
 use App\Core\Database;
 use App\Core\View;
 
@@ -43,6 +99,9 @@ session_set_cookie_params([
     'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
 ]);
 session_start();
+
+// Penegakan idle timeout (30 mnt), absolute lifetime (12 jam), rotasi ID, session_version.
+Auth::tick();
 
 View::init(dirname(__DIR__) . '/app/Views');
 
@@ -66,9 +125,15 @@ $router->post('/cart/clear', [CartController::class, 'clear']);
 // Auth
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
+$router->get('/login/2fa', [AuthController::class, 'showTwoFa']);
+$router->post('/login/2fa', [AuthController::class, 'verifyTwoFa']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->post('/logout', [AuthController::class, 'logout']);
+$router->get('/forgot-password', [AuthController::class, 'showForgot']);
+$router->post('/forgot-password', [AuthController::class, 'forgot']);
+$router->get('/reset-password', [AuthController::class, 'showReset']);
+$router->post('/reset-password', [AuthController::class, 'reset']);
 
 // Checkout + payment
 $router->get('/checkout', [CheckoutController::class, 'show']);
@@ -90,6 +155,9 @@ $router->get('/account/orders/{code}/track', [AccountController::class, 'track']
 $router->get('/account/addresses', [AccountController::class, 'addresses']);
 $router->get('/account/profile', [AccountController::class, 'profile']);
 $router->post('/account/profile', [AccountController::class, 'updateProfile']);
+$router->get('/account/2fa', [AccountController::class, 'twoFa']);
+$router->post('/account/2fa/enable', [AccountController::class, 'enableTwoFa']);
+$router->post('/account/2fa/disable', [AccountController::class, 'disableTwoFa']);
 
 // Admin
 $router->get('/admin', [AdminController::class, 'dashboard']);
@@ -117,12 +185,17 @@ $router->get('/dev/audit-logs', [DevController::class, 'auditLogs']);
 try {
     $router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');
 } catch (Throwable $e) {
-    error_log('[ECOM] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
-    if (($config['app']['env'] ?? 'local') === 'local') {
+    @file_put_contents(
+        $errorLog,
+        date('Y-m-d H:i:s') . ' [DISPATCH] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n",
+        FILE_APPEND | LOCK_EX
+    );
+    if (!headers_sent()) {
         http_response_code(500);
+    }
+    if ($debug) {
         echo '<h1>Error</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
     } else {
-        http_response_code(500);
         echo View::render('errors/500', ['title' => 'Terjadi kesalahan']);
     }
 }
